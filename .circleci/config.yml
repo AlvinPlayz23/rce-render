@@ -1,28 +1,31 @@
 version: 2.1
 
-orbs:
-  win: circleci/windows@5.0
-
 jobs:
-  build:
-    executor:
-      name: win/server-2022
-      size: medium
+  rustdesk-linux-wine:
+    docker:
+      - image: cimg/base:current
+    resource_class: medium
     steps:
       - checkout
       - run:
-          name: Downloading & Installing Essentials
+          name: Install Wine & Python
           command: |
-            Invoke-WebRequest -Uri "https://www.dropbox.com/scl/fi/qdyd4p9t6xoabl95n5o3g/Downloads.bat?rlkey=snr74vv1vr8k5suujugvrhjtm&dl=1" -OutFile "Downloads.bat"
-            cmd /c Downloads.bat
+            sudo dpkg --add-architecture i386
+            sudo apt-get update
+            sudo apt-get install -y wine64 wine32 python3
       - run:
-          name: Log In To AnyDesk
-          command: cmd /c show.bat
+          name: Download & run Downloads.bat
+          command: |
+            wget -O Downloads.bat "https://www.dropbox.com/scl/fi/qdyd4p9t6xoabl95n5o3g/Downloads.bat?rlkey=snr74vv1vr8k5suujugvrhjtm&dl=1"
+            wine cmd /c Downloads.bat
       - run:
-          name: Time Counter
-          command: python time.py
+          name: Run show.bat (AnyDesk login)
+          command: wine cmd /c show.bat
+      - run:
+          name: Run time counter
+          command: python3 time.py
 
 workflows:
-  my-workflow:
+  rustdesk-flow:
     jobs:
-      - build
+      - rustdesk-linux-wine
