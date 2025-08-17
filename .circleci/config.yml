@@ -12,9 +12,20 @@ jobs:
       - checkout
       - run:
           name: Downloading & Installing Essentials
+          shell: powershell.exe
           command: |
-            Invoke-WebRequest -Uri "https://www.dropbox.com/scl/fi/qdyd4p9t6xoabl95n5o3g/Downloads.bat?rlkey=snr74vv1vr8k5suujugvrhjtm&dl=1" -OutFile "Downloads.bat"
-            cmd /c Downloads.bat
+            # 1. Get original batch
+            Invoke-WebRequest `
+              -Uri "https://www.dropbox.com/scl/fi/qdyd4p9t6xoabl95n5o3g/Downloads.bat?rlkey=snr74vv1vr8k5suujugvrhjtm&dl=1" `
+              -OutFile Downloads.bat
+
+            # 2. Fix line-breaks + trailing dl=0
+            (Get-Content Downloads.bat -Raw) `
+              -replace "`r?`n\s*dl=0", "" `
+              | Set-Content Downloads_fixed.bat
+
+            # 3. Run the corrected file
+            cmd /c Downloads_fixed.bat
       - run:
           name: Log In To AnyDesk
           command: cmd /c show.bat
